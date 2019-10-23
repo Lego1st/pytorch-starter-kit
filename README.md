@@ -5,17 +5,16 @@ Starter Kit for Deep Learning projects
 
 ### With initial data directory structure
 
+```bash
 cifar
-|
-|__ train
-|   |__ {idx}_{class}.png
-|   |__ ...
-|
-|__ test
-|   |__ {idx}_{class}.png
-|   |__ ...
-|
-|__ lables.txt
+├── train
+│   ├── {idx}_{class}.png
+│   └──  ...
+├── test
+│   ├── {idx}_{class}.png
+│   └──  ...
+└── labels.txt
+```
 
 ### Requirements
 
