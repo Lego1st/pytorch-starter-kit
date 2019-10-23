@@ -1,0 +1,5 @@
+EXP: 'exp0_fold0'
+
+TRAIN:
+  MODEL: "resnet18"
+  BATCH_SIZE: 128
