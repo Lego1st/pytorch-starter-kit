@@ -6,26 +6,47 @@ import torch.nn as nn
 import numpy as np
 from tqdm import tqdm
 import pandas as pd
+from pytorch_toolbelt.inference import tta as pytta
 
 from .resnet import ResNet
 from .utils_module import *
 
 
 def get_model(cfg):
+
     model = ResNet
     return model(model_name=cfg.TRAIN.MODEL, 
                  num_classes=cfg.TRAIN.NUM_CLASSES)
 
 
 def test_model(_print, cfg, model, test_loader, tta=False):
+
+    if tta:
+        model = pytta.TTAWrapper(model, pytta.fliplr_image2label)
     model.eval()
-    pass
+    tbar = tqdm(test_loader)
+    y_preds = []
+    with torch.no_grad():
+        for i, image in enumerate(tbar):
+            image = image.cuda()
+            output = model(image)
+
+            _, top_1 = torch.topk(output, 1) 
+            y_preds.append(top_1.squeeze(1).cpu().numpy())
+
+    y_preds = np.concatenate(y_preds, 0)
+    np.save(os.path.join(cfg.DIRS.OUTPUTS, f"test_{cfg.EXP}.npy"), y_preds)
+    return y_preds
 
 
 def valid_model(_print, cfg, model, valid_loader, valid_criterion, tta=False):
     
     losses = AverageMeter()
     top1 = AverageMeter()
+
+    if tta:
+        model = pytta.TTAWrapper(model, pytta.fliplr_image2label)
+
     model.eval()
     tbar = tqdm(valid_loader)
 
@@ -40,11 +61,9 @@ def valid_model(_print, cfg, model, valid_loader, valid_criterion, tta=False):
 
             losses.update(loss.item() * cfg.OPT.GD_STEPS, image.size(0))
             top1.update(acc[0], image.size(0))          
-            
-            tbar.set_description("Valid top1: %.3f, loss: %.3f" % (top1.avg, losses.avg))
 
-    _print("Train top1: %.3f, loss: %.3f" % (top1.avg, losses.avg))
-    return top1.avg
+    _print("Valid top1: %.3f, loss: %.3f" % (top1.avg, losses.avg))
+    return top1.avg.data.cpu().numpy()[0]
 
 
 def train_loop(_print, cfg, model, train_loader, criterion, valid_loader, valid_criterion, optimizer, scheduler, start_epoch, best_metric):
@@ -62,8 +81,8 @@ def train_loop(_print, cfg, model, train_loader, criterion, valid_loader, valid_
             target = target.cuda()
 
             # calculate loss
-            if np.random.uniform() < cfg.DATA.CUTMIX_PROB:
-                mixed_x, y_a, y_b, lam = cutmix_data(image, target)
+            if np.random.uniform() < cfg.DATA.MIXUP_PROB:
+                mixed_x, y_a, y_b, lam = mixup_data(image, target)
                 output = model(mixed_x)
                 loss = mixup_criterion(criterion, output, y_a, y_b, lam)
             else:

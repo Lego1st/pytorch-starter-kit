@@ -87,10 +87,10 @@ def getTrainTransforms(size):
             MedianBlur(blur_limit=3),
             Blur(blur_limit=3),
         ], p=0.15),
-        # OneOf([
-        #     RGBShift(),
-        #     HueSaturationValue(),
-        # ], p=0.05),
+        OneOf([
+            RGBShift(),
+            HueSaturationValue(),
+        ], p=0.05),
         HorizontalFlip(p=0.5),
         Normalize(),
         ToTensor()

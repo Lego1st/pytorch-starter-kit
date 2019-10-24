@@ -3,6 +3,8 @@ import sys
 import argparse
 import logging
 import random
+import time
+import uuid
 
 import apex
 from apex import amp
@@ -60,9 +62,10 @@ def setup_logging(args, cfg):
     handlers = [logging.StreamHandler(sys.stderr)]
     handlers.append(logging.FileHandler(
         os.path.join(cfg.DIRS.LOGS, f'{cfg.EXP}.{args.mode}.log'), 
-        mode='w'))
+        mode='a'))
     logging.basicConfig(level=logging.DEBUG, format=head, style='{', handlers=handlers)
-    logging.info(f'Start with config {cfg}')
+    logging.info(f'===============================')
+    logging.info(f'\n\nStart with config {cfg}')
     logging.info(f'Command arguments {args}')
 
 
@@ -73,7 +76,7 @@ def main(args, cfg):
 
     # Declare variables
     start_epoch = 0
-    best_metric = 100.
+    best_metric = 0.
 
     # Create model
     model = get_model(cfg)

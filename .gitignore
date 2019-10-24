@@ -2,6 +2,7 @@
 .ipynb_checkpoints/
 .vscode/
 weights/
+*.npy
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
