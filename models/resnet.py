@@ -17,7 +17,6 @@ class ResNet(nn.Module):
         in_features = model.last_linear.in_features
         del model.last_linear
         feature_map = list(model.children())
-        feature_map.pop()
         self.backbone = nn.Sequential(*list(feature_map))
 
         self.fc = nn.Linear(in_features, num_classes)

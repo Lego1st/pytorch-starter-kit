@@ -3,7 +3,7 @@ from yacs.config import CfgNode as CN
 
 _C = CN()
 
-_C.EXP = "new_exp"
+_C.EXP = "new_exp" # Experiment name
 _C.DEBUG = False
 
 _C.INFER = CN()
@@ -18,7 +18,7 @@ _C.SYSTEM.MULTI_GPU = False
 _C.SYSTEM.NUM_WORKERS = 8
 
 _C.DIRS = CN()
-_C.DIRS.DATA = "/media/sondv7/SSD/DATA/cifar/"
+_C.DIRS.DATA = "/media/nghiant/SSD/DATA/cifar"
 _C.DIRS.WEIGHTS = "./weights/"
 _C.DIRS.OUTPUTS = "./outputs/"
 _C.DIRS.LOGS = "./logs/"
@@ -40,7 +40,7 @@ _C.OPT.WEIGHT_DECAY_BIAS = 0.0
 
 _C.TRAIN = CN()
 _C.TRAIN.FOLD = 0
-_C.TRAIN.MODEL = "new_model"
+_C.TRAIN.MODEL = "new_model" # Model name
 _C.TRAIN.EPOCHS = 20
 _C.TRAIN.BATCH_SIZE = 16
 _C.TRAIN.NUM_CLASSES = 10
