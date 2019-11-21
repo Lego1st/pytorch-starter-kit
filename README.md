@@ -20,10 +20,10 @@ cifar
 
 ```
 .
-├── config.py
+├── config.py # default config for project
 ├── datasets.py
 ├── EDA.ipynb
-├── expconfigs
+├── expconfigs # config for each experiment
 │   └── exp0.yaml
 ├── InferAndTest.ipynb
 ├── logs
@@ -34,9 +34,9 @@ cifar
 ├── main.py
 ├── models
 │   ├── __init__.py
-│   ├── resnet.py
-│   └── utils_module.py
-├── outputs
+│   ├── resnet.py # custom model for project
+│   └── utils_module.py # utilizations for model
+├── outputs # output files such as prediction for test, inference, validation
 │   └── test_exp0_fold0.npy
 ├── README.md
 ├── utils.py
