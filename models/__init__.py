@@ -59,7 +59,7 @@ def valid_model(_print, cfg, model, valid_loader, valid_criterion, tta=False):
             loss = valid_criterion(output, target)
             acc = accuracy(output, target)
 
-            losses.update(loss.item() * cfg.OPT.GD_STEPS, image.size(0))
+            losses.update(loss.item(), image.size(0))
             top1.update(acc[0], image.size(0))          
 
     _print("Valid top1: %.3f, loss: %.3f" % (top1.avg, losses.avg))
