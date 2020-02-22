@@ -18,7 +18,7 @@ _C.SYSTEM.MULTI_GPU = False
 _C.SYSTEM.NUM_WORKERS = 8
 
 _C.DIRS = CN()
-_C.DIRS.DATA = "/media/nghiant/SSD/DATA/cifar"
+_C.DIRS.DATA = "./data/"
 _C.DIRS.WEIGHTS = "./weights/"
 _C.DIRS.OUTPUTS = "./outputs/"
 _C.DIRS.LOGS = "./logs/"
