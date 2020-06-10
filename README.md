@@ -1,4 +1,5 @@
-# pytorch-dl-starter
+# Herbarium 2020 FGCV7
+
 Starter Kit for Deep Learning projects
 
 ## Example case: Cifar-10

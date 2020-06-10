@@ -13,18 +13,20 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader, Subset
 
-
+from core.lr_scheduler import make_lr_scheduler
+from core.optimizer import make_optimizer
+from core.trainer import setup_determinism
+from core.losses import build_loss_func
+from modeling import *
 from config import get_cfg_defaults
-from models import train_loop, valid_model, test_model, get_model
-from datasets import CifarDS
-from lr_scheduler import LR_Scheduler
-from utils import *
+from tools import train_loop, valid_model, test_model
+from datasets.balanced_sampler import class_balanced_sampler
+from datasets.cifards import CifarDS
+
 
 def parse_args():
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="",
             help="config yaml path")
@@ -79,14 +81,40 @@ def main(args, cfg):
     best_metric = 0.
 
     # Create model
-    model = get_model(cfg)
+    model = build_model(cfg)
+
+    # Load data
+    DataSet = CifarDS
+    
+    train_ds = DataSet(cfg, mode="train")
+    valid_ds = DataSet(cfg, mode="valid")
+    test_ds = DataSet(cfg, mode="test")
+    sampler = None
+    shuffle = True
+
+    # Dataloader
+    if cfg.DEBUG:
+        train_ds = Subset(train_ds, np.random.choice(np.arange(len(train_ds)), 100))
+        valid_ds = Subset(valid_ds, np.random.choice(np.arange(len(valid_ds)), 20))
+
+    if cfg.DATA.BALANCE:
+        train_labels = np.vectorize(train_ds.label_code)(train_ds.df['label'].values)
+        sampler = class_balanced_sampler(train_labels, cfg.DATA.NSAMPLE_PER_CLASS)
+        shuffle = False
+
+    train_loader = DataLoader(train_ds, cfg.TRAIN.BATCH_SIZE, shuffle=shuffle, 
+                              drop_last=True, num_workers=cfg.SYSTEM.NUM_WORKERS,
+                              sampler=sampler)
+    valid_loader = DataLoader(valid_ds, cfg.TRAIN.BATCH_SIZE, shuffle=False, 
+                              drop_last=False, num_workers=cfg.SYSTEM.NUM_WORKERS)
+    test_loader = DataLoader(test_ds, cfg.TRAIN.BATCH_SIZE, shuffle=False, 
+                              drop_last=False, num_workers=cfg.SYSTEM.NUM_WORKERS)
 
     # Define Loss and Optimizer
-    train_criterion = nn.CrossEntropyLoss()
-    valid_criterion = nn.CrossEntropyLoss()
-    optimizer = optim.AdamW(params=model.parameters(), 
-                            lr=cfg.OPT.BASE_LR, 
-                            weight_decay=cfg.OPT.WEIGHT_DECAY)
+    train_criterion = build_loss_func(cfg)
+    valid_criterion = build_loss_func(cfg)
+    optimizer = make_optimizer(cfg, model)
+    scheduler = make_lr_scheduler(cfg, optimizer, train_loader)
 
     # CUDA & Mixed Precision
     if cfg.SYSTEM.CUDA:
@@ -116,30 +144,6 @@ def main(args, cfg):
     if cfg.SYSTEM.MULTI_GPU:
         model = nn.DataParallel(model)
 
-    # Load data
-    DataSet = CifarDS
-    train_ds = DataSet(cfg, mode="train")
-    valid_ds = DataSet(cfg, mode="valid")
-    test_ds = DataSet(cfg, mode="test")
-    
-    # Dataloader
-    if cfg.DEBUG:
-        train_ds = Subset(train_ds, np.random.choice(np.arange(len(train_ds)), 20))
-        valid_ds = Subset(valid_ds, np.random.choice(np.arange(len(valid_ds)), 10))
-
-    train_loader = DataLoader(train_ds, cfg.TRAIN.BATCH_SIZE, pin_memory=False, shuffle=True, 
-                              drop_last=False, num_workers=cfg.SYSTEM.NUM_WORKERS)
-    valid_loader = DataLoader(valid_ds, cfg.TRAIN.BATCH_SIZE, pin_memory=False, shuffle=False, 
-                              drop_last=False, num_workers=cfg.SYSTEM.NUM_WORKERS)
-    test_loader = DataLoader(test_ds, cfg.TRAIN.BATCH_SIZE, pin_memory=False, shuffle=False, 
-                              drop_last=False, num_workers=cfg.SYSTEM.NUM_WORKERS)
-
-
-    scheduler = LR_Scheduler("cos", cfg.OPT.BASE_LR, cfg.TRAIN.EPOCHS,\
-                             iters_per_epoch=len(train_loader),
-                             warmup_epochs=cfg.OPT.WARMUP_EPOCHS)
-
-
     if args.mode == "train":
         train_loop(logging.info, cfg, model, \
                 train_loader, train_criterion, valid_loader, valid_criterion, \
@@ -159,7 +163,7 @@ if __name__ == "__main__":
     if args.mode != "train":
         cfg.merge_from_list(['INFER.TTA', args.tta])
     if args.debug:
-        opts = ["DEBUG", True, "TRAIN.EPOCHS", 2]
+        opts = ["DEBUG", True, "TRAIN.EPOCHS", 20]
         cfg.merge_from_list(opts)
     cfg.freeze()
     

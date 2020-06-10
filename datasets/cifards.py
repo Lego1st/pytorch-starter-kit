@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -11,14 +12,15 @@ from albumentations import *
 from albumentations.pytorch import ToTensor
 
 class CifarDS(Dataset):
-
+    
     def __init__(self, cfg, mode="train"):
         super(CifarDS, self).__init__()
+        self.DATA_DIR = Path(cfg.DIRS.DATA)
         if mode == "test":
-            self.df = pd.read_csv(os.path.join(cfg.DIRS.DATA, 'test.csv'))
+            self.df = pd.read_csv(str(self.DATA_DIR / "test.csv"))
         else:   
-            self.df = pd.read_csv(os.path.join(cfg.DIRS.DATA, "folds", f"{mode}_fold{cfg.TRAIN.FOLD}.csv")) 
-        self.data_root = os.path.join(cfg.DIRS.DATA, "test" if mode ==  "test" else "train")
+            self.df = pd.read_csv(str(self.DATA_DIR / "folds" / f"{mode}_fold{cfg.TRAIN.FOLD}.csv")) 
+        self.data_root = self.DATA_DIR / ("test" if mode ==  "test" else "train")
         self.mode = mode
 
         size = cfg.DATA.IMG_SIZE
@@ -35,7 +37,7 @@ class CifarDS(Dataset):
 
     def __getitem__(self, idx):
         info = self.df.loc[idx]
-        img_path = os.path.join(self.data_root, info["id"])
+        img_path = str(self.data_root / info["id"])
         image = self._load_img(img_path)
         if self.mode == "test":
             return image    
@@ -47,30 +49,7 @@ class CifarDS(Dataset):
 def getTrainTransforms(size):
 
     transforms_train = Compose([
-        Resize(size, size),
-        # OneOf([
-        #     ShiftScaleRotate(
-        #         shift_limit=0.0625,
-        #         scale_limit=0.1,
-        #         rotate_limit=30,
-        #         border_mode=cv2.BORDER_CONSTANT,
-        #         value=0),
-        #     GridDistortion(
-        #         distort_limit=0.2,
-        #         border_mode=cv2.BORDER_CONSTANT,
-        #         value=0),
-        #     OpticalDistortion(
-        #         distort_limit=0.2,
-        #         shift_limit=0.15,
-        #         border_mode=cv2.BORDER_CONSTANT,
-        #         value=0),
-        #     NoOp()
-        # ]),
-        # RandomSizedCrop(
-        #     min_max_height=(int(size * 0.75), size),
-        #     height=size,
-        #     width=size,
-        #     p=0.25),
+        Resize(size[0], size[1]),
         OneOf([
             RandomBrightnessContrast(
                 brightness_limit=0.4,
@@ -100,7 +79,7 @@ def getTrainTransforms(size):
 def getTestTransforms(size):
 
     transforms_test = Compose([
-        Resize(size, size),
+        Resize(size[0], size[1]),
         Normalize(),
         ToTensor()
     ])

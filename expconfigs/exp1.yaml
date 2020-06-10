@@ -1,13 +1,14 @@
 EXP: 'exp0'
 
 MODEL:
-  RESNET:
-    BACKBONE: "r50"
+  NAME: "Efficient_v0"
+  EFFICIENT:
+    BACKBONE: "b0"
   NUM_CLASSES: 10
 
 DATA:
   MIXUP_PROB: 0.5
-  IMG_SIZE: 32
+  IMG_SIZE: (32, 32)
 
 TRAIN:
   BATCH_SIZE: 128
