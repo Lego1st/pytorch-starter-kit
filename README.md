@@ -1,4 +1,4 @@
-# Herbarium 2020 FGCV7
+# Pytorch starter kit v2.0
 
 Starter Kit for Deep Learning projects
 
@@ -21,29 +21,46 @@ cifar
 
 ```
 .
-├── config.py # default config for project
-├── datasets.py
-├── EDA.ipynb
-├── expconfigs # config for each experiment
-│   └── exp0.yaml
-├── InferAndTest.ipynb
+├── config.py
+├── core
+│   ├── checkpoint.py
+│   ├── data_manipulater.py
+│   ├── losses.py
+│   ├── lr_scheduler.py
+│   ├── metrics.py
+│   ├── optimizer.py
+│   ├── registry.py
+│   └── trainer.py
+├── datasets
+│   ├── aux_files
+│   ├── balanced_sampler.py
+│   ├── cifards.py
+│   └── data
+├── expconfigs
+│   ├── exp0.yaml
+│   └── exp1.yaml
 ├── logs
-│   ├── exp0_fold0.test.log
-│   ├── exp0_fold0.train.log
-│   └── exp0_fold0.valid.log
-├── lr_scheduler.py
+│   ├── exp0.train.log
+│   ├── new_exp.test.log
+│   ├── new_exp.train.log
+│   └── new_exp.valid.log
 ├── main.py
-├── models
-│   ├── __init__.py
-│   ├── resnet.py # custom model for project
-│   └── utils_module.py # utilizations for model
-├── outputs # output files such as prediction for test, inference, validation
-│   └── test_exp0_fold0.npy
+├── modeling
+│   ├── build.py
+│   ├── efficient.py
+│   ├── __init__.py
+│   ├── layers.py
+│   ├── ml_heads.py
+│   └── resnet.py
+├── outputs
 ├── README.md
-├── utils.py
+├── symlink.sh
+├── tools.py
 └── weights
-    ├── best_exp0_fold0.pth
-    └── exp0_fold0.pth
+    ├── best_exp0.pth
+    ├── best_new_exp.pth
+    ├── exp0.pth
+    └── new_exp.pth
 ```
 
 ###
@@ -62,4 +79,4 @@ python main.py --config expconfigs/exp0.yaml --load weights/best_exp0_fold0.pth 
 
 ### Requirements
 
-yacs, apex, pretrainedmodels, torch, torchvision, pandas, albumentations, pytorch_toolbelt
+yacs, apex, timm, torch, torchvision, pandas, albumentations
