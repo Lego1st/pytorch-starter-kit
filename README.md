@@ -71,7 +71,7 @@ python main.py --config expconfigs/exp0.yaml
 
 # Valid, Test
 python main.py --config expconfigs/exp0.yaml --load weights/best_exp0_fold0.pth --valid
-python main.py --config expconfigs/exp0.yaml --load weights/best_exp0_fold0.pth --test --tta # test with tta mode
+python main.py --config expconfigs/exp0.yaml --load weights/best_exp0_fold0.pth --test
 
 ```
 
