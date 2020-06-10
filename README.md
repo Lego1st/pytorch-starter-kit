@@ -19,7 +19,7 @@ cifar
 
 ### Project structure
 
-```
+```bash
 .
 ├── config.py
 ├── core
@@ -63,10 +63,8 @@ cifar
     └── new_exp.pth
 ```
 
-###
-
-```
-# Examples
+```bash
+# Examples command line
 
 # Train
 python main.py --config expconfigs/exp0.yaml
