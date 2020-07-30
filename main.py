@@ -6,8 +6,6 @@ import random
 import time
 import uuid
 
-import apex
-from apex import amp
 import pandas as pd
 import numpy as np
 import torch
@@ -121,11 +119,6 @@ def main(args, cfg):
         model = model.cuda()
         train_criterion = train_criterion.cuda()
         valid_criterion = valid_criterion.cuda()
-    
-    if cfg.SYSTEM.FP16:
-        model, optimizer = amp.initialize(models=model, optimizers=optimizer, 
-                                          opt_level=cfg.SYSTEM.OPT_L, 
-                                          keep_batchnorm_fp32=(True if cfg.SYSTEM.OPT_L == "O2" else None))
 
     # Load checkpoint
     if args.load != "":

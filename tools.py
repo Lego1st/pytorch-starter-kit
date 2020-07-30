@@ -1,5 +1,4 @@
-import apex
-from apex import amp
+from torch.cuda.amp import autocast, GradScaler
 import torch
 import torch.nn as nn
 import numpy as np
@@ -20,8 +19,9 @@ def test_model(_print, cfg, model, test_loader, tta=False):
     with torch.no_grad():
         for i, image in enumerate(tbar):
             image = image.cuda()
-            outputs = model(image)
-            output = outputs[0]
+            with autocast(enabled=cfg.SYSTEM.FP16):
+                outputs = model(image)
+                output = outputs[0]
 
             # _, top_1 = torch.topk(output, 1) 
             # y_preds.append(top_1.squeeze(1).cpu().numpy())
@@ -46,10 +46,11 @@ def valid_model(_print, cfg, model, valid_loader, valid_criterion, tta=False):
         for i, (image, target) in enumerate(tbar):
             image = image.cuda()
             target = target.cuda()
-
-            outputs = model(image)
-            output = outputs[0]    
-            loss = valid_criterion(output, target)
+            
+            with autocast(enabled=cfg.SYSTEM.FP16):
+                outputs = model(image)
+                output = outputs[0]    
+                loss = valid_criterion(output, target)
 
             np_target = target.cpu().data.numpy()
             np_output = output.argmax(1).cpu().data.numpy()
@@ -75,6 +76,7 @@ def train_loop(_print, cfg, model, train_loader, criterion, valid_loader, valid_
         top1 = AverageMeter()
         model.train()
         tbar = tqdm(train_loader)
+        scaler = GradScaler(enabled=cfg.SYSTEM.FP16)
 
         for i, (image, target) in enumerate(tbar):
             image = image.cuda()
@@ -83,29 +85,27 @@ def train_loop(_print, cfg, model, train_loader, criterion, valid_loader, valid_
             # calculate loss
             if np.random.uniform() < cfg.DATA.MIXUP_PROB:
                 mixed_x, y_a, y_b, lam = mixup_data(image, target)
-                outputs = model(mixed_x)
-                output = outputs[0]
-                loss = mixup_criterion(criterion, output, y_a, y_b, lam)
+                with autocast(enabled=cfg.SYSTEM.FP16):
+                    outputs = model(mixed_x)
+                    output = outputs[0]
+                    loss = mixup_criterion(criterion, output, y_a, y_b, lam)
+                    loss = loss / cfg.OPT.GD_STEPS
             else:
-                outputs = model(image)
-                output = outputs[0]
-                loss = criterion(output, target)
+                with autocast(enabled=cfg.SYSTEM.FP16):
+                    outputs = model(image)
+                    output = outputs[0]
+                    loss = criterion(output, target)
+                    loss = loss / cfg.OPT.GD_STEPS
 
             np_target = target.cpu().data.numpy()
             np_output = output.argmax(1).cpu().data.numpy()
             
-            # gradient accumulation
-            loss = loss / cfg.OPT.GD_STEPS
-            
-            if cfg.SYSTEM.FP16:
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
-            else:
-                loss.backward()
+            scaler.scale(loss).backward()
 
             if (i + 1) % cfg.OPT.GD_STEPS == 0:
-                optimizer.step()
+                scaler.step(optimizer)
                 scheduler.step()
+                scaler.update()
                 optimizer.zero_grad()
 
             # record loss
