@@ -1,4 +1,4 @@
-# Pytorch starter kit v2.0
+# Pytorch starter kit
 
 Starter Kit for Deep Learning projects
 
