@@ -64,7 +64,7 @@ def valid_model(_print, cfg, model, valid_loader, valid_criterion, tta=False):
     np_targets = np.hstack(np_targets)
     metric = accuracy_score(np_outputs, np_targets)
 
-    _print("Valid acc: %.3f, top1: %.3f, loss: %.3f" % (metric, top1.avg, losses.avg))
+    _print("Valid acc: %.3f, top1: %.3f, loss: %.3f" % (metric*100.0, top1.avg, losses.avg))
     return metric
 
 
